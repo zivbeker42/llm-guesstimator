@@ -54,13 +54,11 @@ WORKLOAD_PRESETS: Dict[str, WorkloadConfig] = {
     "default": WorkloadConfig(total_prompt_tokens=20_000.0),
 }
 
-GRID_SETTINGS = {
+S_L_GRID_SETTINGS = {
     "decode": {
-        "initial_context_min": 10.0,
-        "initial_context_samples": 400,
-        "secondary_context_min": 4.0,
-        "secondary_context_samples": 600,
-        "concurrency_range": (1.0, 5000.0, 600),
+        "context_min": 4.0,
+        "context_samples": 400,
+        "concurrency_range": (1.0, 5000, 600),
         "surface_batch_range": (1.0, 1001.0, 50.0),
         "surface_past_length_range": (32.0, 16384.0, 64.0),
     },
@@ -112,7 +110,7 @@ def get_workload_config(name: str = "default") -> WorkloadConfig:
 def decode_surface_grids() -> Tuple[Tuple[float, float, float], Tuple[float, float, float]]:
     """Return the (S, L) ranges for decode surface plots."""
 
-    decode_settings = GRID_SETTINGS["decode"]
+    decode_settings = S_L_GRID_SETTINGS["decode"]
     return (
         decode_settings["surface_batch_range"],
         decode_settings["surface_past_length_range"],
@@ -122,7 +120,7 @@ def decode_surface_grids() -> Tuple[Tuple[float, float, float], Tuple[float, flo
 def prefill_surface_grids() -> Tuple[Tuple[int, ...], Tuple[int, int, int]]:
     """Return the (S, L) grids for prefill surface plots."""
 
-    prefill_settings = GRID_SETTINGS["prefill"]
+    prefill_settings = S_L_GRID_SETTINGS["prefill"]
     return (
         prefill_settings["surface_batch_sizes"],
         prefill_settings["surface_context_range"],
