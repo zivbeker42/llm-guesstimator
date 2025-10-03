@@ -1,0 +1,129 @@
+"""Central configuration for hardware, model, and workload defaults."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Dict, Tuple
+
+
+@dataclass(frozen=True)
+class HardwareConfig:
+    """Describes accelerator characteristics relevant to the estimators."""
+
+    flops_per_second: float
+    memory_bandwidth: float
+    dtype_bytes: float
+    activation_io_multiplier: float
+
+
+@dataclass(frozen=True)
+class ModelConfig:
+    """Represents transformer model dimensions used in the estimators."""
+
+    hidden_size: int
+    num_layers: int
+    expansion_ratio: int
+
+
+@dataclass(frozen=True)
+class WorkloadConfig:
+    """Scenario-specific knobs for the analytical calculations."""
+
+    total_prompt_tokens: float
+
+
+DEFAULT_HARDWARE_NAME = "A100_40GB_FP16"
+DEFAULT_MODEL_NAME = "70B"
+DEFAULT_DECODE_MODEL_NAME = "decode_example"
+
+HARDWARE_PRESETS: Dict[str, HardwareConfig] = {
+    DEFAULT_HARDWARE_NAME: HardwareConfig(
+        flops_per_second=3.12e14,  # sustained FLOPs/s (A100 FP16/BF16)
+        memory_bandwidth=1.555e12,  # sustained memory bandwidth (bytes/s)
+        dtype_bytes=2.0,
+        activation_io_multiplier=12.0,
+    )
+}
+
+MODEL_PRESETS: Dict[str, ModelConfig] = {
+    "7B": ModelConfig(hidden_size=4096, num_layers=32, expansion_ratio=4),
+    DEFAULT_MODEL_NAME: ModelConfig(hidden_size=8192, num_layers=80, expansion_ratio=4),
+    DEFAULT_DECODE_MODEL_NAME: ModelConfig(hidden_size=4096, num_layers=64, expansion_ratio=4),
+}
+
+WORKLOAD_PRESETS: Dict[str, WorkloadConfig] = {
+    "default": WorkloadConfig(total_prompt_tokens=20_000.0),
+}
+
+GRID_SETTINGS = {
+    "decode": {
+        "initial_context_min": 10.0,
+        "initial_context_samples": 400,
+        "secondary_context_min": 4.0,
+        "secondary_context_samples": 600,
+        "concurrency_range": (1.0, 5000.0, 600),
+        "surface_batch_range": (1.0, 1001.0, 50.0),
+        "surface_past_length_range": (32.0, 16384.0, 64.0),
+    },
+    "prefill": {
+        "context_linspace": (1.0, 40_000.0, 400),
+        "sample_batch_sizes": (1, 8, 16, 32, 64, 96),
+        "concurrency_linspace": (1.0, 512.0, 200),
+        "sample_context_lengths": (512, 2048, 8192, 20_000),
+        "summary_points": (
+            {"S": 1, "L": 1024},
+            {"S": 8, "L": 1024},
+            {"S": 32, "L": 2048},
+            {"S": 64, "L": 8192},
+            {"S": 128, "L": 20_000},
+        ),
+        "surface_batch_sizes": (1, 2, 4, 8, 16, 32, 64, 128),
+        "surface_context_range": (128, 8192, 128),
+    },
+}
+
+
+def get_hardware_config(name: str = DEFAULT_HARDWARE_NAME) -> HardwareConfig:
+    """Return a hardware preset by name."""
+
+    try:
+        return HARDWARE_PRESETS[name]
+    except KeyError as exc:  # pragma: no cover - defensive
+        raise ValueError(f"Unknown hardware preset: {name}") from exc
+
+
+def get_model_config(name: str = DEFAULT_MODEL_NAME) -> ModelConfig:
+    """Return a model preset by name."""
+
+    try:
+        return MODEL_PRESETS[name]
+    except KeyError as exc:  # pragma: no cover - defensive
+        raise ValueError(f"Unknown model preset: {name}") from exc
+
+
+def get_workload_config(name: str = "default") -> WorkloadConfig:
+    """Return a workload configuration by name."""
+
+    try:
+        return WORKLOAD_PRESETS[name]
+    except KeyError as exc:  # pragma: no cover - defensive
+        raise ValueError(f"Unknown workload preset: {name}") from exc
+
+
+def decode_surface_grids() -> Tuple[Tuple[float, float, float], Tuple[float, float, float]]:
+    """Return the (S, L) ranges for decode surface plots."""
+
+    decode_settings = GRID_SETTINGS["decode"]
+    return (
+        decode_settings["surface_batch_range"],
+        decode_settings["surface_past_length_range"],
+    )
+
+
+def prefill_surface_grids() -> Tuple[Tuple[int, ...], Tuple[int, int, int]]:
+    """Return the (S, L) grids for prefill surface plots."""
+
+    prefill_settings = GRID_SETTINGS["prefill"]
+    return (
+        prefill_settings["surface_batch_sizes"],
+        prefill_settings["surface_context_range"],
+    )
