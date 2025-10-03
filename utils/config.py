@@ -58,9 +58,9 @@ S_L_GRID_SETTINGS = {
     "decode": {
         "context_min": 4.0,
         "context_samples": 400,
-        "concurrency_range": (1.0, 5000, 600),
+        "batch_range": (1.0, 5000, 600),
         "surface_batch_range": (1.0, 1001.0, 50.0),
-        "surface_past_length_range": (32.0, 16384.0, 64.0),
+        "surface_past_length_range": (32.0, 20000.0, 64.0),
     },
     "prefill": {
         "context_linspace": (1.0, 40_000.0, 400),
