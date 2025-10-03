@@ -53,6 +53,39 @@ def time_per_token_from_S(
     return time_per_token_from_L(L, total_prompt_tokens, model, hardware)
 
 
+def decode_compute_time(
+    S,
+    L,
+    model: ModelConfig,
+    hardware: HardwareConfig,
+) -> np.ndarray:
+    """Decode compute time per generated token."""
+
+    d = model.hidden_size
+    r = model.expansion_ratio
+    n_layers = model.num_layers
+    F = hardware.flops_per_second
+    return (n_layers * S * ((8 + 4 * r) * d**2 + 4 * L * d)) / F
+
+
+def decode_memory_time(
+    S,
+    L,
+    model: ModelConfig,
+    hardware: HardwareConfig,
+) -> np.ndarray:
+    """Decode memory time per generated token."""
+
+    d = model.hidden_size
+    r = model.expansion_ratio
+    n_layers = model.num_layers
+    dtype_bytes = hardware.dtype_bytes
+    BW = hardware.memory_bandwidth
+    c_act = hardware.activation_io_multiplier
+    bytes_total = n_layers * (((4 + 2 * r) * d**2) + (2 * S * L * d) + ((2 + c_act) * S * d)) * dtype_bytes
+    return bytes_total / BW
+
+
 def prefill_compute_time(
     S,
     L,
@@ -85,38 +118,6 @@ def prefill_memory_time(
     bytes_total = n_layers * ((4 + 2 * r) * d**2 + (2 + c_act) * S * L * d) * dtype_bytes
     return bytes_total / BW
 
-
-def decode_compute_time(
-    S,
-    L,
-    model: ModelConfig,
-    hardware: HardwareConfig,
-) -> np.ndarray:
-    """Decode compute time per generated token."""
-
-    d = model.hidden_size
-    r = model.expansion_ratio
-    n_layers = model.num_layers
-    F = hardware.flops_per_second
-    return (n_layers * S * ((8 + 4 * r) * d**2 + 4 * L * d)) / F
-
-
-def decode_memory_time(
-    S,
-    L,
-    model: ModelConfig,
-    hardware: HardwareConfig,
-) -> np.ndarray:
-    """Decode memory time per generated token."""
-
-    d = model.hidden_size
-    r = model.expansion_ratio
-    n_layers = model.num_layers
-    dtype_bytes = hardware.dtype_bytes
-    BW = hardware.memory_bandwidth
-    c_act = hardware.activation_io_multiplier
-    bytes_total = n_layers * (((4 + 2 * r) * d**2) + (2 * S * L + (2 + c_act) * S) * d) * dtype_bytes
-    return bytes_total / BW
 
 
 def weights_bytes(model: ModelConfig, hardware: HardwareConfig) -> float:
