@@ -60,12 +60,12 @@ S_L_GRID_SETTINGS = {
         "context_samples": 400,
         "batch_range": (1.0, 5000, 600),
         "surface_batch_range": (1.0, 1001.0, 50.0),
-        "surface_past_length_range": (32.0, 20000.0, 64.0),
+        "surface_past_length_range": (32.0, 40000.0, 64.0),
     },
     "prefill": {
         "context_linspace": (1.0, 40_000.0, 400),
         "sample_batch_sizes": (1, 8, 16, 32, 64, 96),
-        "concurrency_linspace": (1.0, 512.0, 200),
+        "batch_linspace": (1.0, 512.0, 50),
         "sample_context_lengths": (512, 2048, 8192, 20_000),
         "summary_points": (
             {"S": 1, "L": 1024},
