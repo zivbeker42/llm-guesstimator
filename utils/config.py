@@ -22,7 +22,7 @@ class ModelConfig:
 
     hidden_size: int
     num_layers: int
-    expansion_ratio: int
+    expansion_ratio: float
 
 
 @dataclass(frozen=True)
@@ -60,9 +60,10 @@ HARDWARE_PRESETS: Dict[str, HardwareConfig] = {
 }
 
 MODEL_PRESETS: Dict[str, ModelConfig] = {
-    "7B": ModelConfig(hidden_size=4096, num_layers=32, expansion_ratio=4),
-    DEFAULT_MODEL_NAME: ModelConfig(hidden_size=8192, num_layers=80, expansion_ratio=4),
-    DEFAULT_DECODE_MODEL_NAME: ModelConfig(hidden_size=4096, num_layers=64, expansion_ratio=4),
+    "7B": ModelConfig(hidden_size=4096, num_layers=32, expansion_ratio=4.0),
+    DEFAULT_MODEL_NAME: ModelConfig(hidden_size=8192, num_layers=80, expansion_ratio=4.0),
+    DEFAULT_DECODE_MODEL_NAME: ModelConfig(hidden_size=4096, num_layers=64, expansion_ratio=4.0),
+    "llama33_70B": ModelConfig(hidden_size=8192, num_layers=80, expansion_ratio=3.5),
 }
 
 WORKLOAD_PRESETS: Dict[str, WorkloadConfig] = {
