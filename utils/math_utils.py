@@ -82,7 +82,9 @@ def decode_memory_time(
     dtype_bytes = hardware.dtype_bytes
     BW = hardware.memory_bandwidth * hardware.gpu_count
     c_act = hardware.activation_io_multiplier
-    bytes_total = n_layers * (((4 + 2 * r) * d**2) + (2 * S * L * d) + ((2 + c_act) * S * d)) * dtype_bytes
+    K = 3.03e5 # plateau quickfix  
+    S_eff = min(float(S), K / L)
+    bytes_total = float(n_layers * (((4 + 2 * r) * d**2) + (2 * S_eff * L * d) + ((2 + c_act) * S_eff * d)) * dtype_bytes)
     return bytes_total / BW
 
 
