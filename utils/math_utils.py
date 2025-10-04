@@ -38,7 +38,7 @@ def time_per_token_from_L(
     """Decode time per new token as a function of context length."""
 
     flops = server_total_model_flops(L, total_prompt_tokens, model)
-    return flops / hardware.flops_per_second
+    return flops / (hardware.flops_per_second * hardware.gpu_count)
 
 
 def time_per_token_from_S(
@@ -64,7 +64,7 @@ def decode_compute_time(
     d = model.hidden_size
     r = model.expansion_ratio
     n_layers = model.num_layers
-    F = hardware.flops_per_second
+    F = hardware.flops_per_second * hardware.gpu_count
     return (n_layers * S * ((8 + 4 * r) * d**2 + 4 * L * d)) / F
 
 
@@ -80,7 +80,7 @@ def decode_memory_time(
     r = model.expansion_ratio
     n_layers = model.num_layers
     dtype_bytes = hardware.dtype_bytes
-    BW = hardware.memory_bandwidth
+    BW = hardware.memory_bandwidth * hardware.gpu_count
     c_act = hardware.activation_io_multiplier
     bytes_total = n_layers * (((4 + 2 * r) * d**2) + (2 * S * L * d) + ((2 + c_act) * S * d)) * dtype_bytes
     return bytes_total / BW
@@ -97,7 +97,7 @@ def prefill_compute_time(
     d = model.hidden_size
     r = model.expansion_ratio
     n_layers = model.num_layers
-    F = hardware.flops_per_second
+    F = hardware.flops_per_second * hardware.gpu_count
     return (n_layers * S * ((8 + 4 * r) * L * d**2 + 4 * (L**2) * d)) / F
 
 
@@ -113,7 +113,7 @@ def prefill_memory_time(
     r = model.expansion_ratio
     n_layers = model.num_layers
     dtype_bytes = hardware.dtype_bytes
-    BW = hardware.memory_bandwidth
+    BW = hardware.memory_bandwidth * hardware.gpu_count
     c_act = hardware.activation_io_multiplier
     bytes_total = n_layers * ((4 + 2 * r) * d**2 + (2 + c_act) * S * L * d) * dtype_bytes
     return bytes_total / BW
