@@ -13,6 +13,7 @@ class HardwareConfig:
     memory_bandwidth: float
     dtype_bytes: float
     activation_io_multiplier: float
+    gpu_count: int = 1
 
 
 @dataclass(frozen=True)
@@ -41,6 +42,20 @@ HARDWARE_PRESETS: Dict[str, HardwareConfig] = {
         memory_bandwidth=1.555e12,  # sustained memory bandwidth (bytes/s)
         dtype_bytes=2.0,
         activation_io_multiplier=12.0,
+    ),
+    "H100_80GB_FP8_TP2": HardwareConfig(
+        flops_per_second=3.958e15,  # NVIDIA H100 SXM FP8 tensor throughput per GPU
+        memory_bandwidth=3.35e12,  # sustained HBM3 bandwidth per GPU (bytes/s)
+        dtype_bytes=1.0,
+        activation_io_multiplier=12.0,
+        gpu_count=2,
+    ),
+    "H100_80GB_FP16_TP4": HardwareConfig(
+        flops_per_second=1.979e15,  # NVIDIA H100 SXM FP16 tensor throughput per GPU
+        memory_bandwidth=3.35e12,
+        dtype_bytes=2.0,
+        activation_io_multiplier=12.0,
+        gpu_count=4,
     )
 }
 
