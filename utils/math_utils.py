@@ -73,6 +73,7 @@ def decode_memory_time(
     L,
     model: ModelConfig,
     hardware: HardwareConfig,
+    running_tokens_cap: int = 3e15
 ) -> np.ndarray:
     """Decode memory time per generated token."""
 
@@ -82,9 +83,9 @@ def decode_memory_time(
     dtype_bytes = hardware.dtype_bytes
     BW = hardware.memory_bandwidth * hardware.gpu_count
     c_act = hardware.activation_io_multiplier
-    K = 3.03e5 # plateau quickfix  
-    S_eff = min(float(S), K / L)
-    bytes_total = float(n_layers * (((4 + 2 * r) * d**2) + (2 * S_eff * L * d) + ((2 + c_act) * S_eff * d)) * dtype_bytes)
+    # running_tokens_cap = 3.03e5 # plateau quickfix  
+    S_eff = np.minimum(S, running_tokens_cap / L)
+    bytes_total = n_layers * (((4 + 2 * r) * d**2) + (2 * S_eff * L * d) + ((2 + c_act) * S_eff * d)) * dtype_bytes
     return bytes_total / BW
 
 
