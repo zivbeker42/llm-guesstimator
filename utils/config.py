@@ -56,7 +56,14 @@ HARDWARE_PRESETS: Dict[str, HardwareConfig] = {
         dtype_bytes=2.0,
         activation_io_multiplier=12.0,
         gpu_count=4,
-    )
+    ),
+    "H100_80GB_FP8_TP1": HardwareConfig(
+        flops_per_second=3.958e15,
+        memory_bandwidth=3.35e12,
+        dtype_bytes=1.0,
+        activation_io_multiplier=12.0,
+        gpu_count=1,
+    ),
 }
 
 MODEL_PRESETS: Dict[str, ModelConfig] = {
@@ -64,6 +71,7 @@ MODEL_PRESETS: Dict[str, ModelConfig] = {
     DEFAULT_MODEL_NAME: ModelConfig(hidden_size=8192, num_layers=80, expansion_ratio=4.0),
     DEFAULT_DECODE_MODEL_NAME: ModelConfig(hidden_size=4096, num_layers=64, expansion_ratio=4.0),
     "llama33_70B": ModelConfig(hidden_size=8192, num_layers=80, expansion_ratio=3.5),
+    "llama31_8B": ModelConfig(hidden_size=4096, num_layers=32, expansion_ratio=3.5),
 }
 
 WORKLOAD_PRESETS: Dict[str, WorkloadConfig] = {
