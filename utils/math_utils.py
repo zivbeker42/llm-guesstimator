@@ -94,14 +94,20 @@ def prefill_compute_time(
     L,
     model: ModelConfig,
     hardware: HardwareConfig,
+    running_tokens_cap: int,  
+    prefill_mult_cost: float = 1, 
+    phi_term_pow: float = 1
 ) -> np.ndarray:
     """Prefill compute time per batch step."""
 
     d = model.hidden_size
     r = model.expansion_ratio
     n_layers = model.num_layers
+    S_eff = np.floor(np.minimum(S, running_tokens_cap / L))
+    micro_batches = np.ceil(S / S_eff)
     F = hardware.flops_per_second * hardware.gpu_count
-    return (n_layers * S * ((8 + 4 * r) * L * d**2 + 4 * (L**2) * d)) / F
+    phi_term =  n_layers * S_eff * ((8 + 4 * r) * L * d**2 + 4 * (L**2) * d) / F 
+    return prefill_mult_cost * micro_batches * phi_term / ((1-np.minimum(phi_term, 0.9))**phi_term_pow)
 
 
 def prefill_memory_time(
