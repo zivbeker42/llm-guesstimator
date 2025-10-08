@@ -127,15 +127,17 @@ def prefill_compute_time(
     d = model.hidden_size
     r = model.expansion_ratio
     n_layers = model.num_layers
-    num_micro_batches = np.ceil(S * L / running_tokens_cap) if running_tokens_cap else 1
+    running_tokens_cap = running_tokens_cap if running_tokens_cap else S*L 
+    num_micro_batches = np.ceil(S * L / running_tokens_cap)
     F = hardware.flops_per_second * hardware.gpu_count
+
     pure_compute_time = (
         n_layers
-        * (1 + ((num_micro_batches - 1) * num_micro_batches)) # goes quadratic as every micro-batch waits for his own turn
+        * S # (1 + ((num_micro_batches - 1) * num_micro_batches)) # goes quadratic as every micro-batch waits for his own turn
         * ((8 + 4 * r) * L * d**2 + 4 * (L**2) * d)
         / F
     )
-    return prefill_mult_factor * pure_compute_time # pre
+    return prefill_mult_factor * pure_compute_time # prefill_mult_factor mearnt to fit best to benchmark results
 
 
 def prefill_memory_HBM_wall_time(

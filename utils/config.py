@@ -36,8 +36,8 @@ class WorkloadConfig:
 
 
 DEFAULT_HARDWARE_NAME = "A100_40GB_FP16"
-DEFAULT_MODEL_NAME = "70B"
-DEFAULT_DECODE_MODEL_NAME = "decode_example"
+DEFAULT_MODEL_NAME = "llama31_8B"
+# DEFAULT_DECODE_MODEL_NAME = "llama31_8B"
 
 HARDWARE_PRESETS: Dict[str, HardwareConfig] = {
     DEFAULT_HARDWARE_NAME: HardwareConfig(
@@ -46,7 +46,8 @@ HARDWARE_PRESETS: Dict[str, HardwareConfig] = {
         dtype_bytes=2.0,
         activation_io_multiplier=12.0,
         PCIe_bandwidth=120e9,
-        HBM_size=8.59e10
+        HBM_size=4e10, 
+        gpu_count=1,
     ),
     "H100_80GB_FP8_TP2": HardwareConfig(
         flops_per_second=3.958e15,  # NVIDIA H100 SXM FP8 tensor throughput per GPU
@@ -80,8 +81,8 @@ HARDWARE_PRESETS: Dict[str, HardwareConfig] = {
 
 MODEL_PRESETS: Dict[str, ModelConfig] = {
     "7B": ModelConfig(hidden_size=4096, num_layers=32, expansion_ratio=4.0, model_size=7e9),
-    DEFAULT_MODEL_NAME: ModelConfig(hidden_size=8192, num_layers=80, expansion_ratio=4.0, model_size=80e9),
-    DEFAULT_DECODE_MODEL_NAME: ModelConfig(hidden_size=4096, num_layers=64, expansion_ratio=4.0, model_size=64e9),
+#     DEFAULT_MODEL_NAME: ModelConfig(hidden_size=8192, num_layers=80, expansion_ratio=4.0, model_size=80e9),
+    # DEFAULT_DECODE_MODEL_NAME: ModelConfig(hidden_size=4096, num_layers=64, expansion_ratio=4.0, model_size=64e9),
     "llama33_70B": ModelConfig(hidden_size=8192, num_layers=80, expansion_ratio=3.5, model_size=70e9),
     "llama31_8B": ModelConfig(hidden_size=4096, num_layers=32, expansion_ratio=3.5, model_size=8e9),
 }
@@ -125,7 +126,7 @@ def get_hardware_config(name: str = DEFAULT_HARDWARE_NAME) -> HardwareConfig:
         raise ValueError(f"Unknown hardware preset: {name}") from exc
 
 
-def     get_model_config(name: str = DEFAULT_MODEL_NAME) -> ModelConfig:
+def get_model_config(name: str = DEFAULT_MODEL_NAME) -> ModelConfig:
     """Return a model preset by name."""
 
     try:
