@@ -13,6 +13,8 @@ class HardwareConfig:
     memory_bandwidth: float
     dtype_bytes: float
     activation_io_multiplier: float
+    PCIe_bandwidth: int
+    HBM_size: int 
     gpu_count: int = 1
 
 
@@ -23,6 +25,7 @@ class ModelConfig:
     hidden_size: int
     num_layers: int
     expansion_ratio: float
+    model_size: float
 
 
 @dataclass(frozen=True)
@@ -42,19 +45,26 @@ HARDWARE_PRESETS: Dict[str, HardwareConfig] = {
         memory_bandwidth=1.555e12,  # sustained memory bandwidth (bytes/s)
         dtype_bytes=2.0,
         activation_io_multiplier=12.0,
+        PCIe_bandwidth=120e9,
+        HBM_size=8.59e10
     ),
     "H100_80GB_FP8_TP2": HardwareConfig(
         flops_per_second=3.958e15,  # NVIDIA H100 SXM FP8 tensor throughput per GPU
         memory_bandwidth=3.35e12,  # sustained HBM3 bandwidth per GPU (bytes/s)
         dtype_bytes=1.0,
         activation_io_multiplier=12.0,
+        PCIe_bandwidth=120e9,
+        HBM_size=8.59e10,
         gpu_count=2,
+        
     ),
     "H100_80GB_FP16_TP4": HardwareConfig(
         flops_per_second=1.979e15,  # NVIDIA H100 SXM FP16 tensor throughput per GPU
         memory_bandwidth=3.35e12,
         dtype_bytes=2.0,
         activation_io_multiplier=12.0,
+        PCIe_bandwidth=120e9,
+        HBM_size=8.59e10,
         gpu_count=4,
     ),
     "H100_80GB_FP8_TP1": HardwareConfig(
@@ -62,16 +72,18 @@ HARDWARE_PRESETS: Dict[str, HardwareConfig] = {
         memory_bandwidth=3.35e12,
         dtype_bytes=1.0,
         activation_io_multiplier=12.0,
+        PCIe_bandwidth=120e9,
+        HBM_size=8.59e10,
         gpu_count=1,
     ),
 }
 
 MODEL_PRESETS: Dict[str, ModelConfig] = {
-    "7B": ModelConfig(hidden_size=4096, num_layers=32, expansion_ratio=4.0),
-    DEFAULT_MODEL_NAME: ModelConfig(hidden_size=8192, num_layers=80, expansion_ratio=4.0),
-    DEFAULT_DECODE_MODEL_NAME: ModelConfig(hidden_size=4096, num_layers=64, expansion_ratio=4.0),
-    "llama33_70B": ModelConfig(hidden_size=8192, num_layers=80, expansion_ratio=3.5),
-    "llama31_8B": ModelConfig(hidden_size=4096, num_layers=32, expansion_ratio=3.5),
+    "7B": ModelConfig(hidden_size=4096, num_layers=32, expansion_ratio=4.0, model_size=7e9),
+    DEFAULT_MODEL_NAME: ModelConfig(hidden_size=8192, num_layers=80, expansion_ratio=4.0, model_size=80e9),
+    DEFAULT_DECODE_MODEL_NAME: ModelConfig(hidden_size=4096, num_layers=64, expansion_ratio=4.0, model_size=64e9),
+    "llama33_70B": ModelConfig(hidden_size=8192, num_layers=80, expansion_ratio=3.5, model_size=70e9),
+    "llama31_8B": ModelConfig(hidden_size=4096, num_layers=32, expansion_ratio=3.5, model_size=8e9),
 }
 
 WORKLOAD_PRESETS: Dict[str, WorkloadConfig] = {
@@ -113,7 +125,7 @@ def get_hardware_config(name: str = DEFAULT_HARDWARE_NAME) -> HardwareConfig:
         raise ValueError(f"Unknown hardware preset: {name}") from exc
 
 
-def get_model_config(name: str = DEFAULT_MODEL_NAME) -> ModelConfig:
+def     get_model_config(name: str = DEFAULT_MODEL_NAME) -> ModelConfig:
     """Return a model preset by name."""
 
     try:
