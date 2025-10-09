@@ -76,7 +76,13 @@ def decode_compute_time(
 
 
 def decode_memory_time(
-    S, L, model: ModelConfig, hardware: HardwareConfig, running_tokens_cap: int = np.inf, decode_time_min: float = 0, bytes_mult_factor: float = 1
+    S,
+    L,
+    model: ModelConfig,
+    hardware: HardwareConfig,
+    running_tokens_cap: int = np.inf,
+    decode_time_min: float = 0,
+    bytes_mult_factor: float = 1,
 ) -> np.ndarray:
     """Decode memory time per generated token."""
 
@@ -91,7 +97,7 @@ def decode_memory_time(
         n_layers
         * (((4 + 2 * r) * d**2) + (2 * S_eff * L * d) + ((2 + c_act) * S_eff * d))
         * dtype_bytes
-    ) * bytes_mult_factor # a factor to make up wrong math 
+    ) * bytes_mult_factor  # a factor to make up wrong math
     return bytes_total / BW + decode_time_min
 
 
@@ -102,16 +108,20 @@ def total_prefill_time(
     hardware: HardwareConfig,
     running_tokens_cap: int = None,
     prefill_mult_factor: float = 1,
-    offload_mult_factor: float = 1
+    offload_mult_factor: float = 1,
 ) -> np.ndarray:
-    return prefill_compute_time(
-        S,
-        L,
-        model,
-        hardware,
-        running_tokens_cap,
-        prefill_mult_factor,
-    ) + prefill_memory_HBM_wall_time(S, L, model, hardware) * offload_mult_factor
+    return (
+        prefill_compute_time(
+            S,
+            L,
+            model,
+            hardware,
+            running_tokens_cap,
+            prefill_mult_factor,
+        )
+        + prefill_memory_HBM_wall_time(S, L, model, hardware) * offload_mult_factor
+        + prefill_tensor_parallel_time(S, L, model, hardware)
+    )
 
 
 def prefill_compute_time(
@@ -127,17 +137,19 @@ def prefill_compute_time(
     d = model.hidden_size
     r = model.expansion_ratio
     n_layers = model.num_layers
-    running_tokens_cap = running_tokens_cap if running_tokens_cap else S*L 
+    running_tokens_cap = running_tokens_cap if running_tokens_cap else S * L
     num_micro_batches = np.ceil(S * L / running_tokens_cap)
     F = hardware.flops_per_second * hardware.gpu_count
 
     pure_compute_time = (
         n_layers
-        * S # (1 + ((num_micro_batches - 1) * num_micro_batches)) # goes quadratic as every micro-batch waits for his own turn
+        * S  # (1 + ((num_micro_batches - 1) * num_micro_batches)) # goes quadratic as every micro-batch waits for his own turn
         * ((8 + 4 * r) * L * d**2 + 4 * (L**2) * d)
         / F
     )
-    return prefill_mult_factor * pure_compute_time # prefill_mult_factor mearnt to fit best to benchmark results
+    return (
+        prefill_mult_factor * pure_compute_time
+    )  # prefill_mult_factor mearnt to fit best to benchmark results
 
 
 def prefill_memory_HBM_wall_time(
@@ -179,6 +191,30 @@ def prefill_memory_time(
         n_layers * ((4 + 2 * r) * d**2 + (2 + c_act) * S * L * d) * dtype_bytes
     )
     return bytes_total / BW
+
+
+def prefill_tensor_parallel_time(
+    S: float,
+    L: float,
+    model: ModelConfig,
+    hardware: HardwareConfig,
+):
+    d = model.hidden_size
+    n_layers = model.num_layers
+    dtype_bytes = hardware.dtype_bytes
+    parallelism = hardware.gpu_count
+    bandwidth = (
+        hardware.NVLINK_bandwidth / 2
+    )  # specs are for 2-way direction, and wer'e interested in one-direction BW.
+    return (
+        (3 * (parallelism - 1) / parallelism)
+        * n_layers
+        * S
+        * L
+        * d
+        * dtype_bytes
+        / bandwidth
+    )
 
 
 def weights_bytes(model: ModelConfig, hardware: HardwareConfig) -> float:

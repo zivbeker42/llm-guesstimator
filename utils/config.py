@@ -1,4 +1,5 @@
 """Central configuration for hardware, model, and workload defaults."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -13,8 +14,9 @@ class HardwareConfig:
     memory_bandwidth: float
     dtype_bytes: float
     activation_io_multiplier: float
+    NVLINK_bandwidth: int
     PCIe_bandwidth: int
-    HBM_size: int 
+    HBM_size: int
     gpu_count: int = 1
 
 
@@ -45,8 +47,9 @@ HARDWARE_PRESETS: Dict[str, HardwareConfig] = {
         memory_bandwidth=1.555e12,  # sustained memory bandwidth (bytes/s)
         dtype_bytes=2.0,
         activation_io_multiplier=12.0,
+        NVLINK_bandwidth=900e9,
         PCIe_bandwidth=120e9,
-        HBM_size=4e10, 
+        HBM_size=4e10,
         gpu_count=1,
     ),
     "H100_80GB_FP8_TP2": HardwareConfig(
@@ -54,16 +57,17 @@ HARDWARE_PRESETS: Dict[str, HardwareConfig] = {
         memory_bandwidth=3.35e12,  # sustained HBM3 bandwidth per GPU (bytes/s)
         dtype_bytes=1.0,
         activation_io_multiplier=12.0,
+        NVLINK_bandwidth=900e9,
         PCIe_bandwidth=120e9,
         HBM_size=8.59e10,
         gpu_count=2,
-        
     ),
     "H100_80GB_FP16_TP4": HardwareConfig(
         flops_per_second=1.979e15,  # NVIDIA H100 SXM FP16 tensor throughput per GPU
         memory_bandwidth=3.35e12,
         dtype_bytes=2.0,
         activation_io_multiplier=12.0,
+        NVLINK_bandwidth=900e9,
         PCIe_bandwidth=120e9,
         HBM_size=8.59e10,
         gpu_count=4,
@@ -73,6 +77,7 @@ HARDWARE_PRESETS: Dict[str, HardwareConfig] = {
         memory_bandwidth=3.35e12,
         dtype_bytes=1.0,
         activation_io_multiplier=12.0,
+        NVLINK_bandwidth=900e9,
         PCIe_bandwidth=120e9,
         HBM_size=8.59e10,
         gpu_count=1,
@@ -80,11 +85,17 @@ HARDWARE_PRESETS: Dict[str, HardwareConfig] = {
 }
 
 MODEL_PRESETS: Dict[str, ModelConfig] = {
-    "7B": ModelConfig(hidden_size=4096, num_layers=32, expansion_ratio=4.0, model_size=7e9),
-#     DEFAULT_MODEL_NAME: ModelConfig(hidden_size=8192, num_layers=80, expansion_ratio=4.0, model_size=80e9),
+    "7B": ModelConfig(
+        hidden_size=4096, num_layers=32, expansion_ratio=4.0, model_size=7e9
+    ),
+    #     DEFAULT_MODEL_NAME: ModelConfig(hidden_size=8192, num_layers=80, expansion_ratio=4.0, model_size=80e9),
     # DEFAULT_DECODE_MODEL_NAME: ModelConfig(hidden_size=4096, num_layers=64, expansion_ratio=4.0, model_size=64e9),
-    "llama33_70B": ModelConfig(hidden_size=8192, num_layers=80, expansion_ratio=3.5, model_size=70e9),
-    "llama31_8B": ModelConfig(hidden_size=4096, num_layers=32, expansion_ratio=3.5, model_size=8e9),
+    "llama33_70B": ModelConfig(
+        hidden_size=8192, num_layers=80, expansion_ratio=3.5, model_size=70e9
+    ),
+    "llama31_8B": ModelConfig(
+        hidden_size=4096, num_layers=32, expansion_ratio=3.5, model_size=8e9
+    ),
 }
 
 WORKLOAD_PRESETS: Dict[str, WorkloadConfig] = {
@@ -144,7 +155,9 @@ def get_workload_config(name: str = "default") -> WorkloadConfig:
         raise ValueError(f"Unknown workload preset: {name}") from exc
 
 
-def decode_surface_grids() -> Tuple[Tuple[float, float, float], Tuple[float, float, float]]:
+def decode_surface_grids() -> (
+    Tuple[Tuple[float, float, float], Tuple[float, float, float]]
+):
     """Return the (S, L) ranges for decode surface plots."""
 
     decode_settings = S_L_GRID_SETTINGS["decode"]
