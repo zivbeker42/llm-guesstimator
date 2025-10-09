@@ -17,9 +17,13 @@ Consolidates the corrected prefill and decode formulas into a single playground.
 Loads measured TTFT and ITL results (see `evaluations_results/`), matches them with configuration details, and recomputes the analytical expectations. The notebook produces per-scenario error summaries and overlay plots so the analytical model can be tuned against real hardware traces.
 
 ## Data Inputs
-- `evaluations_results/`: processed latency measurements used by the validation notebook.
 - `tested_benchmarks/`: raw benchmark exports that feed into the processed evaluation files.
-- `utils/`: helper modules shared across the notebooks (loading, plotting, math helpers).
+
+## Outputs
+- `evaluations_results/`: processed latency measurements and evaluation results created by the validation notebook.
+
+## Utilities
+- `utils/`: helper modules shared across the notebooks (configurations, plotting, math helpers).
 
 ## Results
-_TODO: Summarize the primary takeaways from `benchmark_validation.ipynb` plots (e.g., estimator error bands, bottleneck shifts, GPU-specific observations)._ 
+_TODO:_ 
